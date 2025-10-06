@@ -4452,8 +4452,12 @@ export class CanvasRenderer {
       if (this.isWithinVisibility(porto.position, playerPos, visibilityRadius)) {
         const screenPos = worldToScreen(porto.position, camera);
 
-        // Add blue glow effect around portopotty
-        this.ctx.shadowColor = '#4a90e2'; // Blue glow color
+        // Add glow effect around portopotty (blue for working, red for discovered broken)
+        if (porto.broken && porto.discoveredBroken) {
+          this.ctx.shadowColor = '#e74c3c'; // Red glow for discovered broken toilets
+        } else {
+          this.ctx.shadowColor = '#4a90e2'; // Blue glow for working toilets
+        }
         this.ctx.shadowBlur = 20;
         this.ctx.shadowOffsetX = 0;
         this.ctx.shadowOffsetY = 0;
@@ -4463,7 +4467,15 @@ export class CanvasRenderer {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         this.ctx.fillStyle = '#ffffff'; // White color for the emoji
+        
+        // Show toilet emoji
         this.ctx.fillText('🚽', screenPos.x, screenPos.y);
+        
+        // Show small poop emoji on top if broken and discovered
+        if (porto.broken && porto.discoveredBroken) {
+          this.ctx.font = '20px Arial'; // Smaller font for poop emoji
+          this.ctx.fillText('💩', screenPos.x, screenPos.y - 25); // Position above the toilet
+        }
 
         // Add flashing blue light on top of portopotty
         this.renderPortopottyLight(screenPos);

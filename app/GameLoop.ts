@@ -221,14 +221,14 @@ export class GameLoop {
       ],
       portopotties: [
         { id: 'porto-1', position: { x: 1000, y: 500 }, aabb: { x: 1000, y: 500, w: 120, h: 120 }, used: false },
-        { id: 'porto-2', position: { x: 1500, y: 800 }, aabb: { x: 1500, y: 800, w: 120, h: 120 }, used: false },
+        { id: 'porto-2', position: { x: 1500, y: 800 }, aabb: { x: 1500, y: 800, w: 120, h: 120 }, used: false, broken: true }, // Broken toilet
         { id: 'porto-3', position: { x: 2000, y: 1200 }, aabb: { x: 2000, y: 1200, w: 120, h: 120 }, used: false },
         // Move this one away from Boom Boom Womb (playa-camp at 1200,1500) to avoid bathroom-at-camp bug
-        { id: 'porto-4', position: { x: 1100, y: 1650 }, aabb: { x: 1100, y: 1650, w: 120, h: 120 }, used: false },
+        { id: 'porto-4', position: { x: 1100, y: 1650 }, aabb: { x: 1100, y: 1650, w: 120, h: 120 }, used: false, broken: true }, // Broken toilet
         { id: 'porto-5', position: { x: 1800, y: 1800 }, aabb: { x: 1800, y: 1800, w: 120, h: 120 }, used: false },
         // 5 more portopotties for better coverage
         { id: 'porto-6', position: { x: 800, y: 1000 }, aabb: { x: 800, y: 1000, w: 120, h: 120 }, used: false },
-        { id: 'porto-7', position: { x: 2200, y: 600 }, aabb: { x: 2200, y: 600, w: 120, h: 120 }, used: false },
+        { id: 'porto-7', position: { x: 2200, y: 600 }, aabb: { x: 2200, y: 600, w: 120, h: 120 }, used: false, broken: true }, // Broken toilet
         { id: 'porto-8', position: { x: 1400, y: 2000 }, aabb: { x: 1400, y: 2000, w: 120, h: 120 }, used: false },
         { id: 'porto-9', position: { x: 2600, y: 1400 }, aabb: { x: 2600, y: 1400, w: 120, h: 120 }, used: false },
         { id: 'porto-10', position: { x: 900, y: 1700 }, aabb: { x: 900, y: 1700, w: 120, h: 120 }, used: false },
@@ -2947,11 +2947,11 @@ export class GameLoop {
   }
 
   /**
-   * Reset used portopotties after cooldown period (30 seconds)
+   * Reset used portopotties after cooldown period (10 seconds)
    */
   private resetUsedPortopotties(): void {
     const currentTime = Date.now();
-    const cooldownPeriod = 30000; // 30 seconds
+    const cooldownPeriod = 10000; // 10 seconds
     
     for (const porto of this.gameState.portopotties) {
       if (porto.used && porto.usedTime && (currentTime - porto.usedTime) > cooldownPeriod) {
@@ -2981,6 +2981,22 @@ export class GameLoop {
       }
       
       if (distance <= interactionDistance && !porto.used) {
+        // Check if toilet is broken
+        if (porto.broken) {
+          // Mark as discovered broken
+          porto.discoveredBroken = true;
+          
+          // Show broken toilet message
+          const system = getNotificationSystem();
+          system.addNotification('💩 Sorry, you can\'t poop there, the toilet is fucked', 'temporary', 4000, playerPos);
+          
+          // Play different sound for broken toilet
+          this.audio.playSound('buttonClick', 0.3);
+          
+          console.log(`💩 Broken portopotty ${porto.id} at (${porto.position.x}, ${porto.position.y}) - toilet is fucked`);
+          break; // Only interact with one portopotty at a time
+        }
+        
         // Reset bathroom stat to 0
         this.gameState.player.stats.bathroom = 0;
         

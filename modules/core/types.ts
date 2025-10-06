@@ -128,6 +128,8 @@ export interface GameState {
     position: Vec2;
     aabb: { x: number; y: number; w: number; h: number };
     used: boolean;
+    broken?: boolean; // New field for broken toilets
+    discoveredBroken?: boolean; // Track if player has discovered this toilet is broken
   }>;
 }
 
