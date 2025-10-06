@@ -178,8 +178,8 @@ export class CanvasRenderer {
       console.warn('Attempted path:', this.backgroundImage?.src);
       this.backgroundImageLoaded = false;
     };
-    // Load the satellite image from the images folder (with wq2 base path)
-    this.backgroundImage.src = '/wq2/images/playa-sattelite.png';
+    // Load the satellite image from the images folder
+    this.backgroundImage.src = '/images/playa-sattelite.png';
   }
 
   /**
