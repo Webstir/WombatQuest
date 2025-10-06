@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wombat Quest V1.001 - Step 8: World Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: #f0f0f0;
+        }
+
+        /* Menu Overlay */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .menu-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .menu-header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .menu-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 4px solid #007bff;
+        }
+
+        .menu-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-section p {
+            margin: 8px 0;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+
+        .menu-section strong {
+            color: #495057;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .control-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .control-item strong {
+            color: #007bff;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .volume-slider {
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #0056b3, #004085);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
+
+        .seed-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #007bff;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 2px solid #dee2e6;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .close-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-menu:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+
+        /* Menu toggle hint */
+        .menu-hint {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Top Info Panel */
+        .top-info-panel {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #ff6b35;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .time-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .time-display {
+            color: #ffd23f;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .version-display {
+            position: fixed;
+            bottom: 5px;
+            right: 5px;
+            color: #888;
+            font-size: 0.7em;
+            font-weight: normal;
+            opacity: 0.7;
+            z-index: 1000;
+        }
+
+        .pause-btn {
+            background: rgba(255, 107, 53, 0.8);
+            border: 2px solid #ff6b35;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .pause-icon {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pause-bar {
+            width: 3px;
+            height: 12px;
+            background: white;
+            border-radius: 1px;
+        }
+
+        .pause-btn:hover {
+            background: #ff6b35;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.6);
+        }
+
+        .pause-btn.paused {
+            background: rgba(255, 0, 0, 0.8);
+            border-color: #ff0000;
+        }
+
+        .pause-btn.paused:hover {
+            background: #ff0000;
+        }
+
+        .activities-display {
+            color: #ffd23f;
+            font-size: 0.9em;
+            line-height: 1.3;
+        }
+
+        .activities-display p {
+            margin: 2px 0;
+            font-size: 0.85em;
+        }
+
+        /* Inventory Panel */
+        .inventory-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #8b5cf6;
+            min-width: 150px;
+            z-index: 100;
+        }
+
+        .inventory-title {
+            color: #8b5cf6;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .inventory-item {
+            background: rgba(139, 92, 246, 0.2);
+            padding: 6px 10px;
+            margin: 3px 0;
+            border-radius: 12px;
+            font-size: 0.9em;
+            border: 1px solid #8b5cf6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .inventory-item:hover {
+            background: rgba(139, 92, 246, 0.4);
+            border-color: #a855f7;
+            transform: scale(1.05);
+        }
+
+        .inventory-item .quantity {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+            color: #ffd23f;
+        }
+
+        .menu-hint-inventory {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(139, 92, 246, 0.3);
+            color: #ffd23f;
+            font-size: 0.8em;
+            text-align: center;
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ffd23f;
+            min-width: 200px;
+            z-index: 100;
+        }
+
+        .stat-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .stat-label {
+            width: 60px;
+            color: #ffd23f;
+            font-weight: bold;
+        }
+
+        .coin-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #ffd23f;
+            font-weight: bold;
+        }
+
+        .stat-progress {
+            flex: 1;
+            height: 4px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 0 0 10px;
+            position: relative;
+        }
+
+        .stat-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            display: none;
+        }
+
+        .thirst-fill { background: linear-gradient(90deg, #00bfff, #0080ff); }
+        .hunger-fill { background: linear-gradient(90deg, #ff6b35, #ff4500); }
+        .energy-fill { background: linear-gradient(90deg, #ffd23f, #ffed4e); }
+        .mood-fill { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
+        .karma-fill { background: linear-gradient(90deg, #06ffa5, #00ff88); }
+
+        .coin-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .karma-display {
+            margin-top: 8px;
+        }
+
+        .karma-display .coin-amount {
+            color: #06ffa5;
+        }
+
+        /* Action Panel */
+        .actions-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ff6b35;
+            max-width: 300px;
+            z-index: 100;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .action-btn {
+            background: #1c1c28;
+            color: #eae9ff;
+            border: 1px solid #2a2a3d;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            min-height: 44px;
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: #232334;
+            border-color: #ff6b35;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Drug Effects Panel */
+        .drug-effects-panel {
+            position: fixed;
+            top: 280px;
+            right: 20px;
+            background: rgba(139, 92, 246, 0.9);
+            border: 2px solid #a855f7;
+            border-radius: 12px;
+            padding: 12px;
+            color: #fff;
+            font-size: 0.9em;
+            min-width: 200px;
+            display: none;
+        }
+
+        .drug-effect-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+
+        .drug-effect-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .drug-effect-icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        .drug-effect-text {
+            flex-grow: 1;
+        }
+
+        .drug-effect-duration {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+    </style>
+  <script type="module" src="/main.ts"></script>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- Top Info Panel -->
+    <div class="top-info-panel" style="display: none;">
+        <div class="time-controls">
+            <div class="time-display" id="time-display">Day 1 • 08:00</div>
+            <button class="pause-btn" id="pause-btn">
+                <div class="pause-icon">
+                    <div class="pause-bar"></div>
+                    <div class="pause-bar"></div>
+                </div>
+            </button>
+        </div>
+        <div class="activities-display" id="activities-display">
+            <p>Welcome to Burning Man! The playa is starting to fill up...</p>
+        </div>
+    </div>
+    
+    <!-- Inventory Panel -->
+    <div class="inventory-panel" style="display: none;">
+        <div class="inventory-title">🎒 Inventory</div>
+        <div id="inventory-list">
+            <!-- Inventory will be populated here -->
+        </div>
+        <div class="menu-hint-inventory">
+            Press <strong>ESC</strong> to open menu
+        </div>
+    </div>
+    
+    <!-- Stats Panel -->
+    <div class="stats-panel" style="display: none;">
+        <div class="stat-bar">
+            <div class="stat-label">Thirst</div>
+            <div class="stat-progress">
+                <div class="stat-fill thirst-fill" id="thirst-bar"></div>
+            </div>
+            <div class="stat-value" id="thirst-value">100</div>
+        </div>
+        <div class="stat-bar">
+            <div class="stat-label">Hunger</div>
+            <div class="stat-progress">
+                <div class="stat-fill hunger-fill" id="hunger-bar"></div>
+            </div>
+            <div class="stat-value" id="hunger-value">100</div>
+        </div>
+        <div class="stat-bar">
+            <div class="stat-label">Energy</div>
+            <div class="stat-progress">
+                <div class="stat-fill energy-fill" id="energy-bar"></div>
+            </div>
+            <div class="stat-value" id="energy-value">100</div>
+        </div>
+        <div class="stat-bar">
+            <div class="stat-label">Mood</div>
+            <div class="stat-progress">
+                <div class="stat-fill mood-fill" id="mood-bar"></div>
+            </div>
+            <div class="stat-value" id="mood-value">100</div>
+        </div>
+        <div class="coin-display">
+            <div class="coin-label">Coins</div>
+            <div class="coin-amount" id="coin-amount">0</div>
+        </div>
+        <div class="coin-display karma-display">
+            <div class="coin-label">Karma</div>
+            <div class="coin-amount" id="karma-amount">0</div>
+        </div>
+        <div class="coin-display">
+            <div class="coin-label">Speed</div>
+            <div class="coin-amount" id="speed-display">1.0x</div>
+        </div>
+        <div class="coin-display">
+            <div class="coin-label">Time</div>
+            <div class="coin-amount" id="time-perception-display">1.0x</div>
+        </div>
+    </div>
+    
+    <!-- Action Panel -->
+    <div class="actions-panel" style="display: none;">
+        <div class="action-grid">
+            <button class="action-btn" data-action="explore">Explore</button>
+            <button class="action-btn" data-action="gift">Give Gift [G]</button>
+            <button class="action-btn" data-action="rest">Rest (nap) [R]</button>
+            <button class="action-btn" data-action="help">Help Stranger</button>
+            <button class="action-btn" data-action="battle">Silly Battle</button>
+            <button class="action-btn" data-action="meditate">Meditate</button>
+        </div>
+    </div>
+    
+    <!-- Drug Effects Panel -->
+    <div class="drug-effects-panel" id="drug-effects-panel">
+        <div style="font-weight: bold; margin-bottom: 8px; color: #ffd700;">Active Effects</div>
+        <div id="drug-effects-list">
+            <!-- Drug effects will be populated here -->
+        </div>
+    </div>
+    
+    <!-- Version Display -->
+    <div class="version-display">v1</div>
+
+    <div class="menu-overlay" id="menuOverlay">
+        <div class="menu-container">
+            <button class="close-menu" id="closeMenu">&times;</button>
+            
+            <div class="menu-header">
+                <h1>🎮 Wombat Quest V1.001</h1>
+                <p class="subtitle">Step 8: World Management System</p>
+            </div>
+
+            <div class="menu-section">
+                <h3>🎮 Game Controls</h3>
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <strong>WASD / Arrow Keys</strong>
+                        Move the player
+                    </div>
+                    <div class="control-item">
+                        <strong>E</strong>
+                        Rest (restore energy & mood)
+                    </div>
+                    <div class="control-item">
+                        <strong>ESC</strong>
+                        Open/close this menu
+                    </div>
+                    <div class="control-item">
+                        <strong>Walk to edges</strong>
+                        Transition between worlds
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h3>🌍 World Navigation</h3>
+                <p><strong>Camp</strong> - Your home base (1 sec = 1 min)</p>
+                <p><strong>The Playa</strong> - Vast desert with landmarks (1 sec = 1 hour)</p>
+                <p><strong>Dance Stage</strong> - Main stage with lights (1 sec = 30 sec)</p>
+                <p>Walk to world edges or enter the green camp area on the Playa to transition!</p>
+            </div>
+
+            <div class="menu-section">
+                <h3>🔊 Audio Controls</h3>
+                <p><strong>M</strong> - Toggle mute/unmute (in-game)</p>
+                <div class="audio-controls">
+                    <span>Volume:</span>
+                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70">
+                    <span id="volumeDisplay">70%</span>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h3>📊 Game Mechanics</h3>
+                <p><strong>Energy</strong> - Decreases as you move around</p>
+                <p><strong>Mood</strong> - Decreases over time, faster when energy is low</p>
+                <p><strong>Coins</strong> - Collect to increase your coin count</p>
+                <p>Watch the stat bars in the top-left corner of the game!</p>
+            </div>
+
+            <div class="menu-section">
+                <h3>🎲 Game Seed</h3>
+                <p>Current seed: <span class="seed-display" id="seedDisplay">Loading...</span></p>
+                <div class="button-group">
+                    <button id="resetSeed">Reset Game (seed=<span id="resetSeedDisplay">Loading...</span>)</button>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h3>⏸️ Session</h3>
+                <div class="button-group">
+                    <button id="resumeGame">Resume</button>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h3>💾 Save & Load</h3>
+                <div class="button-group">
+                    <button id="saveGame">Save Game</button>
+                    <button id="loadGame">Load Game</button>
+                </div>
+                <div id="statusMessage" class="status-message" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+        <script>
+            // Game initialization handled by main.ts
+        </script>
+</body>
+</html>

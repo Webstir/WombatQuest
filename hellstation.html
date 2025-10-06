@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hell Station Demo</title>
+  <style>
+    html, body { margin:0; padding:0; height:100%; background:#111; }
+    canvas { display:block; width:100vw; height:100vh; background:#1e1e1e; }
+    .hud { position:fixed; top:10px; left:10px; color:#fff; font-family:system-ui, sans-serif; }
+  </style>
+  <script type="module">
+    import { startHellStationDemo } from './src/demo/hellstationDemo.ts';
+    const canvas = document.getElementById('c');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    startHellStationDemo(canvas);
+  </script>
+  <div class="hud">Holding: None</div>
+</head>
+<body>
+  <canvas id="c"></canvas>
+</body>
+</html>
+
+

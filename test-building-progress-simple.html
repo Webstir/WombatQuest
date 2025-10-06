@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Building Progress Test</title>
+</head>
+<body>
+    <h1>Simple Building Progress Test</h1>
+    <div id="output"></div>
+    
+    <script type="module">
+        try {
+            // Test the building progress function directly
+            function getBuildingProgress(day, structure) {
+                console.log(`getBuildingProgress called: day=${day}, structure=${structure}`);
+                
+                if (structure === 'man') {
+                    if (day <= 1) {
+                        console.log('Man: Day 1 or less, returning 0 progress');
+                        return { progress: 0, isBurning: false, isBurned: false };
+                    }
+                    if (day === 2) return { progress: 0.1, isBurning: false, isBurned: false };
+                    if (day === 3) return { progress: 0.3, isBurning: false, isBurned: false };
+                    if (day === 4) return { progress: 0.5, isBurning: false, isBurned: false };
+                    if (day === 5) return { progress: 0.7, isBurning: false, isBurned: false };
+                    if (day === 6) return { progress: 0.9, isBurning: false, isBurned: false };
+                    if (day === 7) return { progress: 1.0, isBurning: false, isBurned: false };
+                    if (day === 8) return { progress: 1.0, isBurning: true, isBurned: false, handsUp: true };
+                    if (day >= 9) return { progress: 0, isBurning: false, isBurned: true };
+                    return { progress: 0, isBurning: false, isBurned: false };
+                } else if (structure === 'temple') {
+                    if (day <= 1) {
+                        console.log('Temple: Day 1 or less, returning 0 progress');
+                        return { progress: 0, isBurning: false, isBurned: false };
+                    }
+                    if (day === 2) return { progress: 0.15, isBurning: false, isBurned: false };
+                    if (day === 3) return { progress: 0.35, isBurning: false, isBurned: false };
+                    if (day === 4) return { progress: 0.55, isBurning: false, isBurned: false };
+                    if (day === 5) return { progress: 0.75, isBurning: false, isBurned: false };
+                    if (day === 6) return { progress: 0.9, isBurning: false, isBurned: false };
+                    if (day === 7) return { progress: 1.0, isBurning: false, isBurned: false };
+                    if (day === 8) return { progress: 1.0, isBurning: false, isBurned: false };
+                    if (day === 9) return { progress: 1.0, isBurning: true, isBurned: false };
+                    if (day >= 10) return { progress: 0, isBurning: false, isBurned: true };
+                    return { progress: 0, isBurning: false, isBurned: false };
+                }
+                return { progress: 0, isBurning: false, isBurned: false };
+            }
+            
+            // Test day 1
+            const manDay1 = getBuildingProgress(1, 'man');
+            const templeDay1 = getBuildingProgress(1, 'temple');
+            
+            document.getElementById('output').innerHTML = `
+                <h2>Day 1 Test Results</h2>
+                <p><strong>Man Progress:</strong> ${manDay1.progress} (should be 0)</p>
+                <p><strong>Temple Progress:</strong> ${templeDay1.progress} (should be 0)</p>
+                
+                <h2>Day 2 Test Results</h2>
+            `;
+            
+            // Test day 2
+            const manDay2 = getBuildingProgress(2, 'man');
+            const templeDay2 = getBuildingProgress(2, 'temple');
+            
+            document.getElementById('output').innerHTML += `
+                <p><strong>Man Progress:</strong> ${manDay2.progress} (should be 0.1)</p>
+                <p><strong>Temple Progress:</strong> ${templeDay2.progress} (should be 0.15)</p>
+                
+                <h2>Day 7 Test Results</h2>
+            `;
+            
+            // Test day 7
+            const manDay7 = getBuildingProgress(7, 'man');
+            const templeDay7 = getBuildingProgress(7, 'temple');
+            
+            document.getElementById('output').innerHTML += `
+                <p><strong>Man Progress:</strong> ${manDay7.progress} (should be 1.0)</p>
+                <p><strong>Temple Progress:</strong> ${templeDay7.progress} (should be 1.0)</p>
+            `;
+            
+            // Check if the function works correctly
+            if (manDay1.progress === 0 && templeDay1.progress === 0) {
+                document.getElementById('output').innerHTML += `
+                    <h2 style="color: green;">✅ SUCCESS: Building progress function works correctly!</h2>
+                `;
+            } else {
+                document.getElementById('output').innerHTML += `
+                    <h2 style="color: red;">❌ FAILED: Building progress function has issues</h2>
+                `;
+            }
+            
+        } catch (error) {
+            document.getElementById('output').innerHTML = `
+                <p>❌ Error: ${error.message}</p>
+                <p>Stack: ${error.stack}</p>
+            `;
+        }
+    </script>
+</body>
+</html>

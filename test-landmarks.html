@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Landmarks Test</title>
+</head>
+<body>
+    <h1>Testing Landmarks Building Progress</h1>
+    <div id="output"></div>
+    
+    <script type="module">
+        try {
+            // Import the landmarks module
+            const { getWorldLandmarks } = await import('./modules/worlds/landmarks.ts');
+            
+            // Test with different days
+            const testDays = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            
+            let output = '<h2>Building Progress by Day</h2>';
+            
+            testDays.forEach(day => {
+                const gameTime = { day, hour: 12, minute: 0 };
+                const landmarks = getWorldLandmarks('playa', gameTime);
+                
+                const manLandmark = landmarks.find(l => l.id === 'the-man');
+                const templeLandmark = landmarks.find(l => l.id === 'the-temple');
+                
+                output += `
+                    <h3>Day ${day}</h3>
+                    <p><strong>Man:</strong> Progress: ${manLandmark?.buildingProgress ?? 'undefined'}, Burning: ${manLandmark?.isBurning ?? 'undefined'}, Burned: ${manLandmark?.isBurned ?? 'undefined'}</p>
+                    <p><strong>Temple:</strong> Progress: ${templeLandmark?.buildingProgress ?? 'undefined'}, Burning: ${templeLandmark?.isBurning ?? 'undefined'}, Burned: ${templeLandmark?.isBurned ?? 'undefined'}</p>
+                `;
+            });
+            
+            document.getElementById('output').innerHTML = output;
+            
+        } catch (error) {
+            document.getElementById('output').innerHTML = `
+                <p>❌ Error: ${error.message}</p>
+                <p>Stack: ${error.stack}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
