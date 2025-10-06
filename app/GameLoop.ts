@@ -302,7 +302,8 @@ export class GameLoop {
    */
   private generateCampMates(): void {
     const campCenter = { x: 800, y: 600 }; // Camp position (center of camp world)
-    const campRadius = 300; // Spread camp mates around the camp (larger radius)
+    const worldWidth = 1600; // Full camp world width
+    const worldHeight = 1200; // Full camp world height
     
     const colors = [
       '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57',
@@ -331,17 +332,13 @@ export class GameLoop {
     ];
     
     for (let i = 0; i < 50; i++) {
-      // Generate random position around the camp
-      const angle = (i / 50) * Math.PI * 2 + this.rng.random() * 0.5; // Spread evenly with some randomness
-      const distance = this.rng.random() * campRadius;
-      const x = campCenter.x + Math.cos(angle) * distance;
-      const y = campCenter.y + Math.sin(angle) * distance;
+      // Generate random position anywhere in the camp world
+      const x = this.rng.random() * worldWidth;
+      const y = this.rng.random() * worldHeight;
       
-      // Generate initial target position
-      const targetAngle = this.rng.random() * Math.PI * 2;
-      const targetDistance = this.rng.random() * campRadius;
-      const targetX = campCenter.x + Math.cos(targetAngle) * targetDistance;
-      const targetY = campCenter.y + Math.sin(targetAngle) * targetDistance;
+      // Generate initial target position anywhere in the camp world
+      const targetX = this.rng.random() * worldWidth;
+      const targetY = this.rng.random() * worldHeight;
       
       this.campMates.push({
         id: `campmate-${i}`,
@@ -3613,8 +3610,8 @@ export class GameLoop {
    * Update camp mates movement
    */
   private updateCampMates(deltaTime: number): void {
-    const campCenter = { x: 800, y: 600 }; // Camp position (center of camp world)
-    const campRadius = 300; // Match the generation radius
+    const worldWidth = 1600; // Full camp world width
+    const worldHeight = 1200; // Full camp world height
     const avoidanceRadius = 40; // Distance to avoid other camp mates
     const avoidanceForce = 2.0; // How strongly they avoid each other
     
@@ -3689,11 +3686,9 @@ export class GameLoop {
           campMate.targetPosition.x = campMate.position.x + Math.cos(targetAngle) * targetDistance;
           campMate.targetPosition.y = campMate.position.y + Math.sin(targetAngle) * targetDistance;
         } else {
-          // In camp - use original camp-based random movement
-          const targetAngle = this.rng.random() * Math.PI * 2;
-          const targetDistance = this.rng.random() * campRadius;
-          campMate.targetPosition.x = campCenter.x + Math.cos(targetAngle) * targetDistance;
-          campMate.targetPosition.y = campCenter.y + Math.sin(targetAngle) * targetDistance;
+          // In camp - use full world random movement
+          campMate.targetPosition.x = this.rng.random() * worldWidth;
+          campMate.targetPosition.y = this.rng.random() * worldHeight;
         }
       } else {
         // Move towards target - faster when following player
@@ -3731,22 +3726,15 @@ export class GameLoop {
         campMate.position.x += moveX;
         campMate.position.y += moveY;
         
-        // Only keep within camp bounds if in camp world and not following the player
+        // Only keep within world bounds if in camp world and not following the player
         // On playa, wombats have complete freedom to wander anywhere
         const currentWorldId = this.worldManager.getCurrentWorldId();
         if (this.gameState.player.equippedItem !== 'Totem' && currentWorldId === 'camp') {
-          const distFromCenter = Math.sqrt(
-            Math.pow(campMate.position.x - campCenter.x, 2) + 
-            Math.pow(campMate.position.y - campCenter.y, 2)
-          );
-          
-          if (distFromCenter > campRadius) {
-            // Push back towards center
-            const pushX = (campCenter.x - campMate.position.x) / distFromCenter * 5;
-            const pushY = (campCenter.y - campMate.position.y) / distFromCenter * 5;
-            campMate.position.x += pushX;
-            campMate.position.y += pushY;
-          }
+          // Keep within world boundaries
+          if (campMate.position.x < 0) campMate.position.x = 0;
+          if (campMate.position.x > worldWidth) campMate.position.x = worldWidth;
+          if (campMate.position.y < 0) campMate.position.y = 0;
+          if (campMate.position.y > worldHeight) campMate.position.y = worldHeight;
         }
         // No boundary restrictions on playa - wombats can wander freely
       }
