@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/WombatQuest/', // GitHub Pages subdirectory
+  base: '/', // Netlify serves from root
   resolve: {
     alias: {
       '@': './',
