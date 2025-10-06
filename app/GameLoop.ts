@@ -68,6 +68,7 @@ export class GameLoop {
   private lastLightSystemLogTime: number = 0; // For 1-second interval logging
   private campMates: Array<{id: string, position: Vec2, color: string, name: string, targetPosition: Vec2, speed: number, mood: number}> = [];
   private lastDialogueCloseTime: number = 0; // Track when dialogue was last closed
+  private lastLoggedLocation: string | null = null; // Track last logged location to prevent spam
   
   // Wombat tracking
   private wombatsAtCamp: number = 50; // Total wombats at camp
@@ -150,7 +151,7 @@ export class GameLoop {
           hunger: 0, // Start empty (increases over time)
           karma: 0,
           speed: 100,
-          lightBattery: 0, // Start with no battery
+          lightBattery: 50, // Start with some battery for testing lights system
           bathroom: 0, // Start empty (increases over time)
         },
         drugs: {
@@ -164,6 +165,7 @@ export class GameLoop {
           addItemToInventory(inventory, 'Grilled Cheese', 1);
           addItemToInventory(inventory, 'Energy Bar', 1);
           addItemToInventory(inventory, 'Totem', 1); // Add totem for testing lighting effects
+          addItemToInventory(inventory, 'Light Bulb White', 1); // Add light bulb for testing lights system
           return inventory;
         })(),
         isResting: false,
@@ -261,8 +263,7 @@ export class GameLoop {
     // Listen for inventory item click events
     window.addEventListener('useInventoryItem', (e: any) => this.handleInventoryItemClick(e.detail.itemType));
     
-    // Listen for light toggle events
-    window.addEventListener('toggleLights', () => this.toggleLights());
+    // Light toggle events are now handled via playerAction events
     
     // Listen for pause toggle events
     window.addEventListener('togglePause', () => this.handlePauseToggle());
@@ -473,7 +474,16 @@ export class GameLoop {
       
       if (isAtHellStation || isAtCenterCamp) {
         timeConfig = CAMP_TIME_CONFIG; // Use camp time when at these locations
-        console.log(`⏰ Time slowed to 1s = 1 minute at ${isAtHellStation ? 'Hell Station' : 'Center Camp'}`);
+        
+        // Only log once when entering the area to prevent spam
+        const currentLocation = isAtHellStation ? 'Hell Station' : 'Center Camp';
+        if (this.lastLoggedLocation !== currentLocation) {
+          console.log(`⏰ Time slowed to 1s = 1 minute at ${currentLocation}`);
+          this.lastLoggedLocation = currentLocation;
+        }
+      } else {
+        // Reset when leaving the area
+        this.lastLoggedLocation = null;
       }
     }
     
@@ -1224,7 +1234,7 @@ export class GameLoop {
         
         // Show notification
         const system = getNotificationSystem();
-        system.addNotification('Battery dead - lights turned off', 'persistent', 0, this.gameState.player.position);
+        system.addNotification('Battery dead - lights turned off', 'warning', 4000, this.gameState.player.position);
       }
     }
 
@@ -1700,7 +1710,7 @@ export class GameLoop {
     // Show notification
     const system = getNotificationSystem();
     const message = this.gameState.player.lightsOn ? 'Lights turned on' : 'Lights turned off';
-    system.addNotification(message, 'persistent', 0, this.gameState.player.position);
+    system.addNotification(message, 'temporary', 3000, this.gameState.player.position);
   }
   
   /**

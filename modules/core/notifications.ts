@@ -61,8 +61,10 @@ export class NotificationSystem implements NotificationManager {
     }
     
     // Check if we can combine with an existing notification of the same type
-    // Don't combine notifications that contain "toilet is fucked" - they should be unique
-    const shouldNotCombine = message.includes("toilet is fucked");
+    // Don't combine notifications that contain "toilet is fucked" or lights messages - they should be unique
+    const shouldNotCombine = message.includes("toilet is fucked") || 
+                             message.includes("Lights turned") ||
+                             message.includes("Battery dead");
     
     const existingNotification = !shouldNotCombine ? this.notifications.find(n => 
       n.type === type && 

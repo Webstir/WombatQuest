@@ -252,15 +252,7 @@ export class CanvasRenderer {
         return;
       }
       
-      // Check lights button
-      if (this.lightsButtonBounds && 
-          x >= this.lightsButtonBounds.x && 
-          x <= this.lightsButtonBounds.x + this.lightsButtonBounds.width &&
-          y >= this.lightsButtonBounds.y && 
-          y <= this.lightsButtonBounds.y + this.lightsButtonBounds.height) {
-        window.dispatchEvent(new CustomEvent('toggleLights'));
-        return;
-      }
+      // Lights button click is now handled in the main handleCanvasClick method
 
       // Check gift button
       if ((this as any).giftButtonBounds) {
@@ -5311,11 +5303,23 @@ export class CanvasRenderer {
     
     // Generate and render NPCs and camps for playa world
     if (currentWorldId === 'playa') {
-      this.generateNPCs();
-      this.generateCamps();
+      // Only generate once when entering playa world
+      if (this.npcs.length === 0) {
+        this.generateNPCs();
+      }
+      if (this.camps.length === 0) {
+        this.generateCamps();
+      }
+      
       this.updateNPCs(16); // Approximate 60fps delta time
       this.renderCamps(camera);
       this.renderNPCs(camera);
+    } else {
+      // Clear NPCs and camps when not in playa world to save memory
+      if (this.npcs.length > 0 || this.camps.length > 0) {
+        this.npcs = [];
+        this.camps = [];
+      }
     }
     
     // Get visibility radius for fog of war
