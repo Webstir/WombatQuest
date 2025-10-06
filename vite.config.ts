@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/wq2/', // GitHub Pages subdirectory
+  base: '/WombatQuest/', // GitHub Pages subdirectory
   resolve: {
     alias: {
       '@': './',
