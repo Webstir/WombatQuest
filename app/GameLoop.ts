@@ -2983,20 +2983,24 @@ export class GameLoop {
       if (distance <= interactionDistance && !porto.used) {
         // Check if toilet is broken
         if (porto.broken) {
-          // Mark as discovered broken
-          porto.discoveredBroken = true;
-          
-          // Show broken toilet message
-          const system = getNotificationSystem();
-          system.addNotification('💩 Sorry, you can\'t poop there, the toilet is fucked', 'temporary', 4000, playerPos);
-          
-          // Play different sound for broken toilet
-          this.audio.playSound('buttonClick', 0.3);
-          
-          console.log(`💩 Broken portopotty ${porto.id} at (${porto.position.x}, ${porto.position.y}) - toilet is fucked`);
+          // Only show notification if not already discovered
+          if (!porto.discoveredBroken) {
+            // Mark as discovered broken
+            porto.discoveredBroken = true;
+            
+            // Show broken toilet message (won't combine due to notification system logic)
+            const system = getNotificationSystem();
+            system.addNotification('💩 Sorry, you can\'t poop there, the toilet is fucked', 'warning', 4000, playerPos);
+            
+            // Play different sound for broken toilet
+            this.audio.playSound('buttonClick', 0.3);
+            
+            console.log(`💩 Broken portopotty ${porto.id} at (${porto.position.x}, ${porto.position.y}) - toilet is fucked`);
+          }
           break; // Only interact with one portopotty at a time
         }
         
+        // Only reset bathroom for working toilets
         // Reset bathroom stat to 0
         this.gameState.player.stats.bathroom = 0;
         
