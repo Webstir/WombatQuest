@@ -1818,10 +1818,48 @@ export class CanvasRenderer {
     // Draw tents in the camp
     this.renderCampTents(camera);
     
-    // Pulsating disco ball on top of our camp area on the playa
+    // HUGE pulsating disco ball in the center of the camp world
     const time = Date.now() * 0.001;
+    const hugeDiscoBallPos = { x: 800, y: 600 }; // Center of camp world
+    const screenPos = worldToScreen(hugeDiscoBallPos, camera);
+    
+    if (isWorldPositionVisible(hugeDiscoBallPos, camera, 100)) {
+      // HUGE pulsating scale effect
+      const pulseScale = 1 + this.cachedSin(time * 2) * 0.4; // Pulse between 0.6 and 1.4
+      const fontSize = 120 * pulseScale * camera.zoom; // Much bigger!
+      
+      this.ctx.font = `${fontSize}px Arial`;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText('🪩', screenPos.x, screenPos.y);
+      
+      // Add spinning light effects around the huge disco ball
+      this.ctx.save();
+      this.ctx.translate(screenPos.x, screenPos.y);
+      
+      // Draw rotating light rays around the huge disco ball
+      const lightColors = ['#FF0080', '#00FF80', '#8000FF', '#FFFF00', '#FF8000', '#0080FF'];
+      for (let i = 0; i < 12; i++) {
+        const angle = (time * 4 + i * Math.PI / 6) % (Math.PI * 2);
+        const lightX = Math.cos(angle) * (fontSize * 0.4);
+        const lightY = Math.sin(angle) * (fontSize * 0.4);
+        
+        // Make lights bigger for the huge disco ball
+        this.ctx.fillStyle = lightColors[i % 6];
+        this.ctx.shadowColor = lightColors[i % 6];
+        this.ctx.shadowBlur = 15;
+        this.ctx.beginPath();
+        this.ctx.arc(lightX, lightY, 12, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.shadowBlur = 0;
+      }
+      
+      this.ctx.restore();
+    }
+    
+    // Pulsating disco ball on top of our camp area on the playa
     const discoBallPos = { x: 1200, y: 1500 }; // Our camp position on the playa
-    const screenPos = worldToScreen(discoBallPos, camera);
+    const playaScreenPos = worldToScreen(discoBallPos, camera);
     
     if (isWorldPositionVisible(discoBallPos, camera, 50)) {
       // Pulsating scale effect
@@ -1831,7 +1869,7 @@ export class CanvasRenderer {
       this.ctx.font = `${fontSize}px Arial`;
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText('🪩', screenPos.x, screenPos.y);
+      this.ctx.fillText('🪩', playaScreenPos.x, playaScreenPos.y);
     }
   }
 
@@ -4160,18 +4198,18 @@ export class CanvasRenderer {
         case 'camp':
           // Draw different types of camps
           if (landmark.id === 'playa-camp') {
-            // Draw playa camp with beige background and better styling
+            // Draw Boom Boom Womb camp with purple theme and paw print
             const campWidth = 100;
             const campHeight = 75;
             const campX = screenPos.x - campWidth / 2;
             const campY = screenPos.y - campHeight / 2;
             
-            // Draw beige background
-            this.ctx.fillStyle = '#f5deb3'; // Beige color
+            // Draw purple background
+            this.ctx.fillStyle = '#8B4F8B'; // Purple color
             this.ctx.fillRect(campX, campY, campWidth, campHeight);
             
-            // Draw grey dotted border
-            this.ctx.strokeStyle = '#808080'; // Grey color
+            // Draw purple dotted border
+            this.ctx.strokeStyle = '#6A3A6A'; // Darker purple
             this.ctx.lineWidth = 2;
             this.ctx.setLineDash([5, 5]); // Dashed line pattern
             this.ctx.strokeRect(campX, campY, campWidth, campHeight);
@@ -4179,16 +4217,52 @@ export class CanvasRenderer {
             // Reset line dash
             this.ctx.setLineDash([]);
             
+            // Draw pulsating disco ball at the top center
+            const time = Date.now() * 0.003;
+            const pulseScale = 1 + Math.sin(time) * 0.2; // Pulsating scale
+            const discoBallY = screenPos.y - campHeight / 2 - 15;
+            
+            // Draw the pulsating disco ball emoji
+            this.ctx.save();
+            this.ctx.font = `${28 * pulseScale}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('🪩', screenPos.x, discoBallY);
+            this.ctx.restore();
+            
+            // Add night lights around the camp perimeter (small glowing dots)
+            const lightPositions = [
+              {x: campX + 10, y: campY + 10},
+              {x: campX + campWidth - 10, y: campY + 10},
+              {x: campX + 10, y: campY + campHeight - 10},
+              {x: campX + campWidth - 10, y: campY + campHeight - 10},
+              {x: campX + campWidth/2, y: campY + 5},
+              {x: campX + campWidth/2, y: campY + campHeight - 5},
+              {x: campX + 5, y: campY + campHeight/2},
+              {x: campX + campWidth - 5, y: campY + campHeight/2}
+            ];
+            
+            lightPositions.forEach((light, index) => {
+              const lightPulse = 1 + Math.sin(time * 1.5 + index * 0.5) * 0.3;
+              this.ctx.fillStyle = '#FFD700'; // Golden light
+              this.ctx.shadowColor = '#FFD700';
+              this.ctx.shadowBlur = 6 * lightPulse;
+              this.ctx.beginPath();
+              this.ctx.arc(light.x, light.y, 3 * lightPulse, 0, Math.PI * 2);
+              this.ctx.fill();
+              this.ctx.shadowBlur = 0;
+            });
+            
             // Add "BOOM BOOM WOMB" text
-            this.ctx.fillStyle = '#8b4513'; // Brown text
+            this.ctx.fillStyle = '#FFFFFF'; // White text for contrast
             this.ctx.font = 'bold 12px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
-            this.ctx.fillText('BOOM BOOM WOMB', screenPos.x, screenPos.y - 10);
+            this.ctx.fillText('BOOM BOOM WOMB', screenPos.x, screenPos.y + 20);
             
-            // Add camp emoji on top
-            this.ctx.font = '20px Arial';
-            this.ctx.fillText('🏕️', screenPos.x, screenPos.y + 10);
+            // Add paw print emoji below
+            this.ctx.font = '16px Arial';
+            this.ctx.fillText('🐾', screenPos.x, screenPos.y + 35);
           } else if (landmark.id === 'hell-station') {
             // Draw Hell Station with orange-red styling
             const stationWidth = 80;
@@ -4211,31 +4285,92 @@ export class CanvasRenderer {
             this.ctx.textBaseline = 'middle';
             this.ctx.fillText('⛽', screenPos.x, screenPos.y);
           } else if (landmark.id === 'center-camp') {
-            // Draw Center Camp with blue styling
-            const campWidth = 100;
-            const campHeight = 80;
-            const campX = screenPos.x - campWidth / 2;
-            const campY = screenPos.y - campHeight / 2;
+            // Draw Center Camp as realistic circular structure with radiating roof panels
+            const campRadius = 65;
             
-            // Draw blue background
-            this.ctx.fillStyle = '#3498db';
-            this.ctx.fillRect(campX, campY, campWidth, campHeight);
+            // Draw main circular base
+            this.ctx.fillStyle = '#E8D5C4'; // Canvas/beige
+            this.ctx.strokeStyle = '#8B7355';
+            this.ctx.lineWidth = 4;
+            this.ctx.beginPath();
+            this.ctx.arc(screenPos.x, screenPos.y, campRadius, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.stroke();
             
-            // Draw border
-            this.ctx.strokeStyle = '#2980b9';
-            this.ctx.lineWidth = 3;
-            this.ctx.strokeRect(campX, campY, campWidth, campHeight);
+            // Draw radiating roof panels (like the pleated umbrella effect)
+            const panelCount = 16;
+            for (let i = 0; i < panelCount; i++) {
+              const angle = (Math.PI * 2 / panelCount) * i;
+              const innerRadius = campRadius * 0.15;
+              const outerRadius = campRadius * 0.95;
+              
+              // Alternate panel colors for the pleated effect
+              this.ctx.fillStyle = i % 2 === 0 ? '#2C3E50' : '#34495E';
+              
+              this.ctx.beginPath();
+              this.ctx.moveTo(screenPos.x, screenPos.y);
+              this.ctx.lineTo(
+                screenPos.x + Math.cos(angle) * outerRadius,
+                screenPos.y + Math.sin(angle) * outerRadius
+              );
+              this.ctx.lineTo(
+                screenPos.x + Math.cos(angle + Math.PI * 2 / panelCount) * outerRadius,
+                screenPos.y + Math.sin(angle + Math.PI * 2 / panelCount) * outerRadius
+              );
+              this.ctx.closePath();
+              this.ctx.fill();
+            }
+            
+            // Draw central opening (the spiral pattern area)
+            this.ctx.fillStyle = '#E8D5C4';
+            this.ctx.beginPath();
+            this.ctx.arc(screenPos.x, screenPos.y, campRadius * 0.15, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            // Draw support poles around perimeter
+            this.ctx.strokeStyle = '#654321';
+            this.ctx.lineWidth = 4;
+            for (let i = 0; i < 8; i++) {
+              const angle = (Math.PI * 2 / 8) * i;
+              const x = screenPos.x + Math.cos(angle) * campRadius;
+              const y = screenPos.y + Math.sin(angle) * campRadius;
+              this.ctx.beginPath();
+              this.ctx.moveTo(x, y);
+              this.ctx.lineTo(x, y + 15);
+              this.ctx.stroke();
+            }
+            
+            // Draw perimeter extensions/awning panels
+            for (let i = 0; i < 8; i++) {
+              const angle = (Math.PI * 2 / 8) * i;
+              const extensionLength = 20;
+              const extensionWidth = 15;
+              
+              this.ctx.fillStyle = '#F4F4F4';
+              this.ctx.save();
+              this.ctx.translate(
+                screenPos.x + Math.cos(angle) * (campRadius + extensionLength/2),
+                screenPos.y + Math.sin(angle) * (campRadius + extensionLength/2)
+              );
+              this.ctx.rotate(angle);
+              this.ctx.fillRect(-extensionWidth/2, -extensionLength/2, extensionWidth, extensionLength);
+              this.ctx.restore();
+            }
+            
+            // Draw cafe counter in center area
+            this.ctx.fillStyle = '#8B4513';
+            this.ctx.fillRect(screenPos.x - 25, screenPos.y - 10, 50, 20);
             
             // Add center camp text
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.font = 'bold 12px Arial';
+            this.ctx.fillStyle = '#2C3E50';
+            this.ctx.font = 'bold 14px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
-            this.ctx.fillText('CENTER CAMP', screenPos.x, screenPos.y - 10);
+            this.ctx.fillText('CENTER CAMP', screenPos.x, screenPos.y - campRadius - 20);
             
-            // Add ice and tea emojis
-            this.ctx.font = '16px Arial';
-            this.ctx.fillText('🧊🍵', screenPos.x, screenPos.y + 10);
+            // Add amenities text
+            this.ctx.font = '11px Arial';
+            this.ctx.fillText('☕ 🧊 🍵 Coffee • Ice • Tea', screenPos.x, screenPos.y - campRadius - 6);
           } else {
             // Draw main camp as a tent
             this.ctx.beginPath();
@@ -4271,110 +4406,249 @@ export class CanvasRenderer {
     const time = Date.now() * 0.003;
     const pulseIntensity = 0.3 + Math.sin(time) * 0.2;
     
-    // Outer glow
-    this.ctx.shadowColor = color;
-    this.ctx.shadowBlur = 20 * pulseIntensity;
-    this.ctx.shadowOffsetX = 0;
-    this.ctx.shadowOffsetY = 0;
-    
-    // Main rest area shape based on type
-    this.ctx.fillStyle = color;
-    this.ctx.strokeStyle = '#ffffff';
-    this.ctx.lineWidth = 3;
+    // Remove glow for more realistic look
+    this.ctx.shadowColor = 'transparent';
+    this.ctx.shadowBlur = 0;
     
     switch (restAreaType) {
       case 'center':
-        // Center Camp - rectangular with rounded corners
-        const centerWidth = size * 1.5;
-        const centerHeight = size;
-        this.drawRoundedRect(pos.x - centerWidth/2, pos.y - centerHeight/2, centerWidth, centerHeight, 10);
+        // Center Camp - realistic circular structure with radiating roof panels
+        const centerRadius = size * 0.9;
+        
+        // Draw main circular base
+        this.ctx.fillStyle = '#E8D5C4'; // Canvas/beige
+        this.ctx.strokeStyle = '#8B7355';
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.arc(pos.x, pos.y, centerRadius, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.stroke();
         
+        // Draw radiating roof panels (pleated umbrella effect)
+        const panelCount = 12;
+        for (let i = 0; i < panelCount; i++) {
+          const angle = (Math.PI * 2 / panelCount) * i;
+          const innerRadius = centerRadius * 0.15;
+          const outerRadius = centerRadius * 0.95;
+          
+          // Alternate panel colors for pleated effect
+          this.ctx.fillStyle = i % 2 === 0 ? '#2C3E50' : '#34495E';
+          
+          this.ctx.beginPath();
+          this.ctx.moveTo(pos.x, pos.y);
+          this.ctx.lineTo(
+            pos.x + Math.cos(angle) * outerRadius,
+            pos.y + Math.sin(angle) * outerRadius
+          );
+          this.ctx.lineTo(
+            pos.x + Math.cos(angle + Math.PI * 2 / panelCount) * outerRadius,
+            pos.y + Math.sin(angle + Math.PI * 2 / panelCount) * outerRadius
+          );
+          this.ctx.closePath();
+          this.ctx.fill();
+        }
+        
+        // Draw central opening
+        this.ctx.fillStyle = '#E8D5C4';
+        this.ctx.beginPath();
+        this.ctx.arc(pos.x, pos.y, centerRadius * 0.15, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Draw support poles
+        this.ctx.strokeStyle = '#654321';
+        this.ctx.lineWidth = 3;
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI * 2 / 6) * i;
+          const x = pos.x + Math.cos(angle) * centerRadius;
+          const y = pos.y + Math.sin(angle) * centerRadius;
+          this.ctx.beginPath();
+          this.ctx.moveTo(x, y);
+          this.ctx.lineTo(x, y + 12);
+          this.ctx.stroke();
+        }
+        
+        // Draw perimeter extensions
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI * 2 / 6) * i;
+          const extensionLength = 15;
+          const extensionWidth = 12;
+          
+          this.ctx.fillStyle = '#F4F4F4';
+          this.ctx.save();
+          this.ctx.translate(
+            pos.x + Math.cos(angle) * (centerRadius + extensionLength/2),
+            pos.y + Math.sin(angle) * (centerRadius + extensionLength/2)
+          );
+          this.ctx.rotate(angle);
+          this.ctx.fillRect(-extensionWidth/2, -extensionLength/2, extensionWidth, extensionLength);
+          this.ctx.restore();
+        }
+        
+        // Draw cafe counter
+        this.ctx.fillStyle = '#8B4513';
+        this.ctx.fillRect(pos.x - 20, pos.y - 8, 40, 16);
+        
+        // Draw sitting areas (cushions)
+        this.ctx.fillStyle = '#9B59B6';
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI * 2 / 6) * i;
+          const cushionX = pos.x + Math.cos(angle) * (centerRadius * 0.6);
+          const cushionY = pos.y + Math.sin(angle) * (centerRadius * 0.6);
+          this.ctx.fillRect(cushionX - 6, cushionY - 5, 12, 10);
+        }
+        
         // Add center camp text
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 12px Arial';
+        this.ctx.fillStyle = '#2C3E50';
+        this.ctx.font = 'bold 14px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('CENTER CAMP', pos.x, pos.y - 5);
-        this.ctx.font = '10px Arial';
-        this.ctx.fillText('2x Energy Recovery', pos.x, pos.y + 8);
+        this.ctx.fillText('CENTER CAMP', pos.x, pos.y - centerRadius - 15);
+        this.ctx.font = '11px Arial';
+        this.ctx.fillText('☕ 🧊 🍵 Coffee • Ice • Tea', pos.x, pos.y - centerRadius - 2);
         break;
         
       case 'teepee':
-        // Teepee - triangular shape
+        // Realistic teepee with poles and decorations
+        const teepeeHeight = size * 0.9;
+        const teepeeWidth = size * 0.7;
+        
+        // Draw teepee body (cone shape)
+        this.ctx.fillStyle = '#DEB887'; // Tan/burlywood
+        this.ctx.strokeStyle = '#8B7355';
+        this.ctx.lineWidth = 3;
         this.ctx.beginPath();
-        this.ctx.moveTo(pos.x, pos.y - size/2);
-        this.ctx.lineTo(pos.x - size/2, pos.y + size/2);
-        this.ctx.lineTo(pos.x + size/2, pos.y + size/2);
+        this.ctx.moveTo(pos.x, pos.y - teepeeHeight);
+        this.ctx.lineTo(pos.x - teepeeWidth/2, pos.y + teepeeHeight/3);
+        this.ctx.lineTo(pos.x + teepeeWidth/2, pos.y + teepeeHeight/3);
         this.ctx.closePath();
         this.ctx.fill();
         this.ctx.stroke();
         
+        // Draw teepee poles sticking out the top
+        this.ctx.strokeStyle = '#654321';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(pos.x - 5, pos.y - teepeeHeight);
+        this.ctx.lineTo(pos.x - 8, pos.y - teepeeHeight - 15);
+        this.ctx.stroke();
+        this.ctx.beginPath();
+        this.ctx.moveTo(pos.x + 5, pos.y - teepeeHeight);
+        this.ctx.lineTo(pos.x + 8, pos.y - teepeeHeight - 15);
+        this.ctx.stroke();
+        
+        // Draw entrance flap
+        this.ctx.fillStyle = '#8B7355';
+        this.ctx.beginPath();
+        this.ctx.moveTo(pos.x, pos.y + teepeeHeight/3);
+        this.ctx.lineTo(pos.x - 15, pos.y + teepeeHeight/3);
+        this.ctx.lineTo(pos.x, pos.y - teepeeHeight/4);
+        this.ctx.closePath();
+        this.ctx.fill();
+        
+        // Draw decorative pattern
+        this.ctx.fillStyle = '#CD853F';
+        for (let i = 0; i < 3; i++) {
+          const y = pos.y - teepeeHeight/2 + i * 15;
+          this.ctx.beginPath();
+          this.ctx.arc(pos.x - 10, y, 3, 0, Math.PI * 2);
+          this.ctx.fill();
+          this.ctx.beginPath();
+          this.ctx.arc(pos.x + 10, y, 3, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+        
         // Add teepee text
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 10px Arial';
+        this.ctx.fillStyle = '#654321';
+        this.ctx.font = 'bold 12px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('DEEP PLAYA', pos.x, pos.y - 15);
-        this.ctx.font = '8px Arial';
-        this.ctx.fillText('TEEPEE', pos.x, pos.y - 5);
-        this.ctx.fillText('2x Energy', pos.x, pos.y + 15);
+        this.ctx.fillText('DEEP PLAYA TEEPEE', pos.x, pos.y - teepeeHeight - 30);
         break;
         
       case 'east':
-        // East Rest Area - circular with zen garden feel
+        // East Rest Area - realistic shade structure with yoga mats
+        const eastWidth = size * 0.9;
+        
+        // Draw shade structure base
+        this.ctx.fillStyle = '#E6E6FA'; // Lavender
+        this.ctx.strokeStyle = '#9370DB';
+        this.ctx.lineWidth = 3;
         this.ctx.beginPath();
-        this.ctx.arc(pos.x, pos.y, size/2, 0, Math.PI * 2);
+        this.ctx.ellipse(pos.x, pos.y, eastWidth, eastWidth * 0.7, 0, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.stroke();
         
-        // Add zen stones
-        this.ctx.fillStyle = '#34495e';
-        this.ctx.beginPath();
-        this.ctx.arc(pos.x - 15, pos.y - 10, 3, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.beginPath();
-        this.ctx.arc(pos.x + 10, pos.y + 8, 2, 0, Math.PI * 2);
-        this.ctx.fill();
+        // Draw support posts
+        this.ctx.strokeStyle = '#654321';
+        this.ctx.lineWidth = 4;
+        for (let i = 0; i < 4; i++) {
+          const angle = (Math.PI / 2) * i;
+          const postX = pos.x + Math.cos(angle) * eastWidth * 0.8;
+          const postY = pos.y + Math.sin(angle) * eastWidth * 0.5;
+          this.ctx.beginPath();
+          this.ctx.moveTo(postX, postY);
+          this.ctx.lineTo(postX, postY + 12);
+          this.ctx.stroke();
+        }
+        
+        // Draw yoga mats
+        const matColors = ['#FF69B4', '#00CED1', '#FFD700'];
+        for (let i = 0; i < 3; i++) {
+          const matX = pos.x - 25 + i * 25;
+          const matY = pos.y - 5;
+          this.ctx.fillStyle = matColors[i];
+          this.ctx.fillRect(matX - 6, matY - 10, 12, 20);
+        }
         
         // Add text
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = 'bold 10px Arial';
+        this.ctx.fillStyle = '#4B0082';
+        this.ctx.font = 'bold 12px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('EAST REST', pos.x, pos.y - 15);
-        this.ctx.font = '8px Arial';
-        this.ctx.fillText('2x Energy', pos.x, pos.y + 15);
+        this.ctx.fillText('EAST REST 🧘', pos.x, pos.y - eastWidth - 12);
         break;
         
       case 'west':
-        // West Rest Area - hexagonal meditation spot
+        // West Rest Area - meditation dome with cushions
+        const domeRadius = size * 0.75;
+        
+        // Draw dome structure
+        this.ctx.fillStyle = '#F0E68C'; // Khaki
+        this.ctx.strokeStyle = '#DAA520';
+        this.ctx.lineWidth = 3;
         this.ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2;
-          const x = pos.x + Math.cos(angle) * size/2;
-          const y = pos.y + Math.sin(angle) * size/2;
-          if (i === 0) {
-            this.ctx.moveTo(x, y);
-          } else {
-            this.ctx.lineTo(x, y);
-          }
-        }
-        this.ctx.closePath();
+        this.ctx.arc(pos.x, pos.y, domeRadius, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.stroke();
         
-        // Add meditation symbol
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = '16px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('🧘', pos.x, pos.y - 5);
+        // Draw inner circle (floor)
+        this.ctx.fillStyle = '#DEB887';
+        this.ctx.beginPath();
+        this.ctx.arc(pos.x, pos.y, domeRadius * 0.6, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Draw meditation cushions in circle
+        const cushionColors = ['#9B59B6', '#E74C3C', '#3498DB', '#2ECC71', '#F39C12'];
+        for (let i = 0; i < 5; i++) {
+          const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+          const cushionX = pos.x + Math.cos(angle) * (domeRadius * 0.4);
+          const cushionY = pos.y + Math.sin(angle) * (domeRadius * 0.4);
+          this.ctx.fillStyle = cushionColors[i];
+          this.ctx.beginPath();
+          this.ctx.arc(cushionX, cushionY, 6, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+        
+        // Draw center altar/table
+        this.ctx.fillStyle = '#8B4513';
+        this.ctx.fillRect(pos.x - 8, pos.y - 6, 16, 12);
         
         // Add text
-        this.ctx.font = 'bold 8px Arial';
-        this.ctx.fillText('WEST REST', pos.x, pos.y + 15);
+        this.ctx.fillStyle = '#654321';
+        this.ctx.font = 'bold 12px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('WEST MEDITATION 🕉️', pos.x, pos.y - domeRadius - 12);
         break;
     }
     
