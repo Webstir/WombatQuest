@@ -1026,7 +1026,7 @@ export class GameLoop {
                 
                 // Show battery charge notification
                 const system = getNotificationSystem();
-                system.addNotification(`Battery charged! (${newBatteryLevel}%)`, 'item', 2, collectible.position);
+                system.addNotification(`Battery charged! (${Math.round(newBatteryLevel)}%)`, 'item', 2, collectible.position);
               }
               
               // Check for "Not a Darkwad" achievement (first light bulb)
@@ -4033,7 +4033,7 @@ export class GameLoop {
   }
 
   /**
-   * Show achievement celebration overlay (smaller, no background)
+   * Show achievement celebration overlay with fancy banner and confetti
    */
   private showAchievementCelebration(name: string, description: string): void {
     // Create celebration overlay - positioned below top banner
@@ -4049,17 +4049,22 @@ export class GameLoop {
       text-align: center;
     `;
 
-    // Create celebration content - no background or border
+    // Create celebration content with fancy banner
     const content = document.createElement('div');
     content.style.cssText = `
       text-align: center;
       animation: achievementPulse 2s ease-in-out;
-      max-width: 400px;
+      max-width: 500px;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.95) 0%, rgba(255, 185, 0, 0.95) 100%);
+      border: 3px solid #FFD700;
+      border-radius: 15px;
+      padding: 25px 40px;
+      box-shadow: 0 10px 40px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3);
     `;
 
-    // Add simple CSS animation
+    // Add CSS animations for banner and confetti
     const style = document.createElement('style');
     style.textContent = `
       @keyframes achievementPulse {
@@ -4067,15 +4072,54 @@ export class GameLoop {
         50% { transform: scale(1.05); opacity: 1; }
         100% { transform: scale(1); opacity: 1; }
       }
+      @keyframes confettiFall {
+        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+      }
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        top: -20px;
+        animation: confettiFall 3s ease-in-out forwards;
+      }
     `;
     document.head.appendChild(style);
 
+    // Create confetti particles
+    const confettiColors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+    for (let i = 0; i < 30; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.cssText = `
+        left: ${Math.random() * 100}%;
+        background: ${confettiColors[Math.floor(Math.random() * confettiColors.length)]};
+        animation-delay: ${Math.random() * 0.5}s;
+        animation-duration: ${2 + Math.random() * 2}s;
+      `;
+      overlay.appendChild(confetti);
+    }
+
     content.innerHTML = `
-      <div style="font-size: 2em; margin-bottom: 10px;">🏆</div>
-      <h2 style="color: #ffd700; font-size: 1.5em; margin: 0 0 8px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+      <div style="font-size: 3em; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🏆</div>
+      <h2 style="
+        color: #8B4513; 
+        font-size: 2em; 
+        margin: 0 0 12px 0; 
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        font-weight: bold;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      ">
         ${name}
       </h2>
-      <p style="color: #fff; font-size: 1em; margin: 0; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+      <p style="
+        color: #654321; 
+        font-size: 1.2em; 
+        margin: 0; 
+        font-weight: bold; 
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+      ">
         ${description}
       </p>
     `;
@@ -4083,7 +4127,7 @@ export class GameLoop {
     overlay.appendChild(content);
     document.body.appendChild(overlay);
 
-    // Remove overlay after 3 seconds
+    // Remove overlay after 4 seconds
     setTimeout(() => {
       if (document.body.contains(overlay)) {
         document.body.removeChild(overlay);
@@ -4091,7 +4135,7 @@ export class GameLoop {
       if (document.head.contains(style)) {
         document.head.removeChild(style);
       }
-    }, 3000);
+    }, 4000);
   }
 
   /**

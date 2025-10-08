@@ -89,7 +89,7 @@ export class NotificationSystem implements NotificationManager {
         type,
         value,
         timestamp: now,
-        duration: 2000, // 2 seconds
+        duration: 3500, // 3.5 seconds total (3s visible + 0.5s fade)
         worldPosition: { ...worldPosition },
         alpha: 1.0,
         count: 1
@@ -113,14 +113,21 @@ export class NotificationSystem implements NotificationManager {
       }
       
       const elapsed = now - notification.timestamp;
-      const progress = elapsed / notification.duration;
+      const visibleDuration = 3000; // Stay at full opacity for 3 seconds
+      const fadeDuration = 500; // Then fade out over 0.5 seconds
       
-      if (progress >= 1) {
+      if (elapsed >= notification.duration) {
         return false; // Remove expired notifications
       }
 
-      // Update alpha (fade out) - no position changes needed since they're fixed screen positions
-      notification.alpha = 1 - progress;
+      // Stay at full opacity for the visible duration, then quickly fade out
+      if (elapsed < visibleDuration) {
+        notification.alpha = 1.0;
+      } else {
+        const fadeElapsed = elapsed - visibleDuration;
+        const fadeProgress = fadeElapsed / fadeDuration;
+        notification.alpha = 1 - fadeProgress;
+      }
 
       return true;
     });

@@ -1774,7 +1774,7 @@ export class CanvasRenderer {
       const finalY = screenPos.y - stackOffset;
       
       // Get color based on type
-      const color = this.getNotificationColor(notification.type, notification.value);
+      const color = this.getNotificationColor(notification.type, notification.value, notification.message);
       
       // Draw text outline for better readability
       this.ctx.strokeStyle = `rgba(0, 0, 0, ${notification.alpha * 0.8})`;
@@ -2256,7 +2256,95 @@ export class CanvasRenderer {
   /**
    * Get color for notification type
    */
-  private getNotificationColor(type: string, value: number): string {
+  private getNotificationColor(type: string, value: number, message: string): string {
+    // Check if toilet is broken (red)
+    const isBrokenToilet = message.includes('toilet is fucked') || message.includes('toilet is broken');
+    
+    if (isBrokenToilet) {
+      return '#e74c3c'; // Red for broken toilet
+    }
+    
+    // Check if it's bathroom related (brown)
+    const isBathroom = message.includes('bathroom') || 
+                       message.includes('Bathroom') || 
+                       message.includes('toilet') || 
+                       message.includes('🚽') ||
+                       message.includes('portopotty') ||
+                       message.includes('💩');
+    
+    if (isBathroom) {
+      return '#8B4513'; // Brown for bathroom notifications
+    }
+    
+    // Check if it's a MOOP related notification
+    const isMoop = message.includes('Ducting') || 
+                   message.includes('Bucket') || 
+                   message.includes('Zip Tie') || 
+                   message.includes('Glitter') || 
+                   message.includes('Rope') || 
+                   message.includes('Plastic Bag') ||
+                   message.includes('Water Bottle') ||
+                   message.includes('Cup') ||
+                   message.includes('Flashing Light') ||
+                   message.includes('Furry Hat') ||
+                   message.includes('Cigarette Butt') ||
+                   message.includes('Boots') ||
+                   message.includes('Cat Head') ||
+                   message.includes('Clothing') ||
+                   message.includes('Cape') ||
+                   message.toLowerCase().includes('moop') ||
+                   message.includes('karma)'); // MOOP pickups include "(+X karma)"
+    
+    if (isMoop) {
+      return '#999999'; // Grey for all MOOP notifications
+    }
+    
+    // Check if it's a food item notification
+    const isFood = message.includes('Grilled Cheese') || 
+                   message.includes('Energy Bar') || 
+                   message.includes('Fruit Salad') || 
+                   message.includes('Smoothie') || 
+                   message.includes('Popsicle') || 
+                   message.includes('Burrito') || 
+                   message.includes('Taco') || 
+                   message.includes('Ice Cream') || 
+                   message.includes('Corn Dog') || 
+                   message.includes('Funnel Cake') || 
+                   message.includes('Nachos') || 
+                   message.includes('Cotton Candy') ||
+                   message.includes('Bacon Pancakes') ||
+                   message.includes('Dusty Donut') ||
+                   message.includes('Playa Pizza') ||
+                   message.includes('Burner Burger') ||
+                   message.includes('Pickles');
+    
+    if (isFood) {
+      return '#ff8c00'; // Orange for all food notifications
+    }
+    
+    // Check if it's water/thirst related
+    const isWater = message.includes('Water') || 
+                    message.includes('water') || 
+                    message.includes('Thirst') || 
+                    message.includes('thirst') || 
+                    message.includes('dehydrat') ||
+                    message.includes('💧');
+    
+    if (isWater) {
+      return '#3498db'; // Blue for water/thirst notifications
+    }
+    
+    // Check if it's a battery or light related notification
+    const isBatteryOrLight = message.includes('Battery') || 
+                             message.includes('battery') || 
+                             message.includes('Light') || 
+                             message.includes('light') ||
+                             message.includes('Lights');
+    
+    if (isBatteryOrLight) {
+      return '#27ae60'; // Green for all battery and light notifications
+    }
+    
     const isPositive = value > 0;
     
     switch (type) {
@@ -2269,13 +2357,13 @@ export class CanvasRenderer {
       case 'energy':
         return isPositive ? '#f1c40f' : '#e74c3c'; // Yellow for positive, red for negative
       case 'mood':
-        return isPositive ? '#9b59b6' : '#e74c3c'; // Purple for positive, red for negative
+        return isPositive ? '#3498db' : '#e74c3c'; // Blue for positive, red for negative
       case 'karma':
         return isPositive ? '#27ae60' : '#e74c3c'; // Green for positive, red for negative
       case 'speed':
         return isPositive ? '#1abc9c' : '#e74c3c'; // Teal for positive, red for negative
       case 'item':
-        return '#8b5cf6'; // Purple for items
+        return '#00d9ff'; // Bright cyan for items
       default:
         return isPositive ? '#27ae60' : '#e74c3c'; // Green for positive, red for negative
     }
